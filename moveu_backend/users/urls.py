@@ -6,7 +6,10 @@ from .views import (
     LogoutView,
     SetUserTypeView,
     RegisterDriverProfileView,
-    UserScheduleListCreateView
+    UserScheduleListCreateView,
+    CityListView,
+    NeighborhoodByCityView,
+    UniversityListView
 )
 
 urlpatterns = [
@@ -20,5 +23,12 @@ urlpatterns = [
     path("set_user_type/", SetUserTypeView.as_view(), name="set_user_type"),  # define se é motorista ou passageiro
     path("register_driver_profile/", RegisterDriverProfileView.as_view(), name="register_driver_profile"),  # completa registro motorista
     path('set_user_schedule/', UserScheduleListCreateView.as_view(), name='user_schedule'),
+
+    # Cidades /  Bairros
+    path("cities/", CityListView.as_view(), name="cities"),
+    path("cities/<int:city_id>/neighborhoods/", NeighborhoodByCityView.as_view(), name="neighborhoods_by_city"),
+
+    # Faculdades
+    path("universities/", UniversityListView.as_view(), name="universities"),
 
 ]

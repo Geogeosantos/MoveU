@@ -1,11 +1,11 @@
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
-from .models import User, UserSchedule
-from .serializers import UserSerializer, RegisterSerializer, DriverProfileSerializer, UserScheduleSerializer
+from .models import User, UserSchedule, City, Neighborhood, DriverProfile, University
+from .serializers import UserSerializer, RegisterSerializer, DriverProfileSerializer, UserScheduleSerializer, CitySerializer, NeighborhoodSerializer, UniversitySerializer
 
 
 class RegisterView(generics.CreateAPIView):
@@ -17,7 +17,7 @@ class RegisterView(generics.CreateAPIView):
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
 
-        # Gera o token JWT
+        
         refresh = RefreshToken.for_user(user)
 
         data = {
@@ -36,7 +36,7 @@ class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
         token = super().get_token(user)
-        token["username"] = user.username  # add extra data if needed
+        token["username"] = user.username 
         return token
 
 
@@ -44,13 +44,12 @@ class LoginView(TokenObtainPairView):
     serializer_class = CustomTokenObtainPairSerializer
 
 
-# Atualiza tipo de usuário (motorista ou passageiro)
 class SetUserTypeView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
     def post(self, request):
         user = request.user
-        user_type = request.data.get("type")  # "driver" ou "passenger"
+        user_type = request.data.get("type") 
 
         if user_type == "driver":
             user.is_driver = True
@@ -60,7 +59,7 @@ class SetUserTypeView(APIView):
         return Response({"status": "success", "is_driver": user.is_driver})
 
 
-# Registrar perfil de motorista
+
 class RegisterDriverProfileView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -68,6 +67,9 @@ class RegisterDriverProfileView(APIView):
         user = request.user
         if not user.is_driver:
             return Response({"error": "Usuário não é motorista"}, status=status.HTTP_400_BAD_REQUEST)
+        
+        if hasattr(user, "driver_profile"):
+            return Response({"error": "Perfil de motorista já registrado."}, status=status.HTTP_400_BAD_REQUEST)
 
         serializer = DriverProfileSerializer(data=request.data)
         if serializer.is_valid():
@@ -76,7 +78,6 @@ class RegisterDriverProfileView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-# Profile (view & update)
 class ProfileView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -86,7 +87,6 @@ class ProfileView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
 
-# Logout
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
@@ -108,4 +108,22 @@ class UserScheduleListCreateView(generics.ListCreateAPIView):
         return UserSchedule.objects.filter(user=self.request.user)
 
     def perform_create(self, serializer):
+        day = serializer.validated_data["day"]
+        if UserSchedule.objects.filter(user=self.request.user, day=day).exists():
+            raise serializers.ValidationError({"day": "Horário para este dia já existe."})
         serializer.save(user=self.request.user)
+
+class CityListView(generics.ListAPIView):
+    queryset = City.objects.all()
+    serializer_class = CitySerializer
+
+class NeighborhoodByCityView(generics.ListAPIView):
+    serializer_class = NeighborhoodSerializer
+
+    def get_queryset(self):
+        city_id = self.kwargs.get("city_id")
+        return Neighborhood.objects.filter(city_id=city_id)
+
+class UniversityListView(generics.ListAPIView):
+    queryset = University.objects.all()
+    serializer_class = UniversitySerializer
