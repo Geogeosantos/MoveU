@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// Base URL da API
-const String baseUrl = 'http://10.0.2.2:8000/api/users/';
+/// Base URL da API (apenas /api/)
+const String baseUrl = 'http://10.0.2.2:8000/api/';
 
 /// Headers padrão (quando não precisa token)
 Map<String, String> defaultHeaders = {"Content-Type": "application/json"};
@@ -14,8 +14,10 @@ Map<String, String> authHeaders(String token) => {
 };
 
 /// =================================================
-/// REGISTER USER
+/// USERS ENDPOINTS
 /// =================================================
+
+/// REGISTER USER
 Future<String?> registerUser({
   required String username,
   required String email,
@@ -26,7 +28,7 @@ Future<String?> registerUser({
   required int university,
   required String gender,
 }) async {
-  final url = Uri.parse('${baseUrl}register/');
+  final url = Uri.parse('${baseUrl}users/register/');
 
   final body = jsonEncode({
     "username": username,
@@ -55,9 +57,103 @@ Future<String?> registerUser({
   }
 }
 
-/// =================================================
+/// LOGIN USER
+Future<String?> loginUser({
+  required String email,
+  required String senha,
+}) async {
+  final url = Uri.parse('${baseUrl}users/login/');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: defaultHeaders,
+      body: jsonEncode({"email": email, "password": senha}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['access'];
+    }
+
+    print("Login error: ${response.statusCode} | ${response.body}");
+    return null;
+  } catch (e) {
+    print("Connection error (Login): $e");
+    return null;
+  }
+}
+
+/// GET PROFILE
+Future<Map<String, dynamic>?> getProfile(String token) async {
+  final url = Uri.parse('${baseUrl}users/profile/');
+
+  try {
+    final response = await http.get(url, headers: authHeaders(token));
+
+    if (response.statusCode == 200) {
+      return jsonDecode(response.body);
+    }
+
+    print("Profile error: ${response.statusCode} | ${response.body}");
+    return null;
+  } catch (e) {
+    print("Connection error (Profile): $e");
+    return null;
+  }
+}
+
+/// UPDATE PROFILE
+Future<bool> updateProfile({
+  required String token,
+  String? nome,
+  String? email,
+  String? telefone,
+}) async {
+  final url = Uri.parse('${baseUrl}users/profile/');
+
+  final body = {
+    if (nome != null) "username": nome,
+    if (email != null) "email": email,
+    if (telefone != null) "phone_number": telefone,
+  };
+
+  try {
+    final response = await http.put(
+      url,
+      headers: authHeaders(token),
+      body: jsonEncode(body),
+    );
+
+    return response.statusCode == 200;
+  } catch (e) {
+    print("Connection error (Update Profile): $e");
+    return false;
+  }
+}
+
+/// SET USER TYPE
+Future<bool> setUserType({
+  required String token,
+  required String tipo, // "driver" ou "passenger"
+}) async {
+  final url = Uri.parse('${baseUrl}users/set_user_type/');
+
+  try {
+    final response = await http.post(
+      url,
+      headers: authHeaders(token),
+      body: jsonEncode({"type": tipo}),
+    );
+
+    return response.statusCode == 200;
+  } catch (e) {
+    print("Connection error (User Type): $e");
+    return false;
+  }
+}
+
 /// REGISTER DRIVER PROFILE
-/// =================================================
 Future<bool> registerDriverProfile({
   required String token,
   required String cnh,
@@ -68,7 +164,7 @@ Future<bool> registerDriverProfile({
   required String corCarro,
   required int anoCarro,
 }) async {
-  final url = Uri.parse('${baseUrl}register_driver_profile/');
+  final url = Uri.parse('${baseUrl}users/register_driver_profile/');
 
   final body = jsonEncode({
     "cnh": cnh,
@@ -97,120 +193,14 @@ Future<bool> registerDriverProfile({
   }
 }
 
-/// =================================================
-/// LOGIN USER
-/// =================================================
-Future<String?> loginUser({
-  required String email,
-  required String senha,
-}) async {
-  final url = Uri.parse('${baseUrl}login/');
-
-  try {
-    final response = await http.post(
-      url,
-      headers: defaultHeaders,
-      body: jsonEncode({"email": email, "password": senha}),
-    );
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
-      return data['access'];
-    }
-
-    print("Login error: ${response.statusCode} | ${response.body}");
-    return null;
-  } catch (e) {
-    print("Connection error (Login): $e");
-    return null;
-  }
-}
-
-/// =================================================
-/// GET PROFILE
-/// =================================================
-Future<Map<String, dynamic>?> getProfile(String token) async {
-  final url = Uri.parse('${baseUrl}profile/');
-
-  try {
-    final response = await http.get(url, headers: authHeaders(token));
-
-    if (response.statusCode == 200) {
-      return jsonDecode(response.body);
-    }
-
-    print("Profile error: ${response.statusCode} | ${response.body}");
-    return null;
-  } catch (e) {
-    print("Connection error (Profile): $e");
-    return null;
-  }
-}
-
-/// =================================================
-/// UPDATE PROFILE
-/// =================================================
-Future<bool> updateProfile({
-  required String token,
-  String? nome,
-  String? email,
-  String? telefone,
-}) async {
-  final url = Uri.parse('${baseUrl}profile/');
-
-  final body = {
-    if (nome != null) "username": nome,
-    if (email != null) "email": email,
-    if (telefone != null) "phone_number": telefone,
-  };
-
-  try {
-    final response = await http.put(
-      url,
-      headers: authHeaders(token),
-      body: jsonEncode(body),
-    );
-
-    return response.statusCode == 200;
-  } catch (e) {
-    print("Connection error (Update Profile): $e");
-    return false;
-  }
-}
-
-/// =================================================
-/// SET USER TYPE
-/// =================================================
-Future<bool> setUserType({
-  required String token,
-  required String tipo, // "driver" ou "passenger"
-}) async {
-  final url = Uri.parse('${baseUrl}set_user_type/');
-
-  try {
-    final response = await http.post(
-      url,
-      headers: authHeaders(token),
-      body: jsonEncode({"type": tipo}),
-    );
-
-    return response.statusCode == 200;
-  } catch (e) {
-    print("Connection error (User Type): $e");
-    return false;
-  }
-}
-
-/// =================================================
 /// SET USER SCHEDULE
-/// =================================================
 Future<bool> setUserSchedule({
   required String token,
   required String day,
   required String startTime,
   required String endTime,
 }) async {
-  final url = Uri.parse('${baseUrl}set_user_schedule/');
+  final url = Uri.parse('${baseUrl}users/set_user_schedule/');
 
   try {
     final response = await http.post(
@@ -231,64 +221,74 @@ Future<bool> setUserSchedule({
 }
 
 /// =================================================
-/// GET CITIES
+/// Rides ENDPOINTS
 /// =================================================
-Future<List<Map<String, dynamic>>?> getCities() async {
-  final url = Uri.parse('${baseUrl}cities/');
+
+/// GET AVAILABLE DRIVERS
+Future<List<Map<String, dynamic>>> getAvailableDrivers(String token) async {
+  final url = Uri.parse('${baseUrl}rides/available_drivers/');
 
   try {
-    final response = await http.get(url);
+    final response = await http.get(url, headers: authHeaders(token));
 
     if (response.statusCode == 200) {
       return List<Map<String, dynamic>>.from(jsonDecode(response.body));
     }
 
-    print("Cities error: ${response.statusCode} | ${response.body}");
-    return null;
+    print("Get drivers error: ${response.statusCode} | ${response.body}");
+    return [];
   } catch (e) {
-    print("Connection error (Cities): $e");
-    return null;
+    print("Connection error (Drivers): $e");
+    return [];
+  }
+}
+
+Future<List<Map<String, dynamic>>> getReceivedRideRequests(String token) async {
+  final url = Uri.parse('${baseUrl}rides/received_rides/');
+
+  try {
+    final response = await http.get(url, headers: authHeaders(token));
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    }
+    print("Get ride requests error: ${response.statusCode} | ${response.body}");
+    return [];
+  } catch (e) {
+    print("Connection error (Ride Requests): $e");
+    return [];
   }
 }
 
 /// =================================================
-/// GET UNIVERSITIES
+/// UPDATE RIDE STATUS (ACCEPT / REJECT)
 /// =================================================
-Future<List<Map<String, dynamic>>?> getUniversities() async {
-  final url = Uri.parse('${baseUrl}universities/');
+Future<bool> postRideStatus({
+  required String token,
+  required int rideId,
+  required String status, // "accepted" ou "rejected"
+  String? reason,         // opcional, apenas se rejeitado
+}) async {
+  final url = Uri.parse('${baseUrl}rides/ride_status/$rideId/');
+
+  final body = {
+    "status": status,
+    if (reason != null) "reason": reason,
+  };
 
   try {
-    final response = await http.get(url);
+    final response = await http.post(
+      url,
+      headers: authHeaders(token),
+      body: jsonEncode(body),
+    );
 
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-    }
+    if (response.statusCode == 200) return true;
 
-    print("Universities error: ${response.statusCode} | ${response.body}");
-    return null;
+    print(
+        "Error updating ride status: ${response.statusCode} | ${response.body}");
+    return false;
   } catch (e) {
-    print("Connection error (Universities): $e");
-    return null;
-  }
-}
-
-/// =================================================
-/// GET NEIGHBORHOODS BY CITY
-/// =================================================
-Future<List<Map<String, dynamic>>?> getNeighborhoods(int cityId) async {
-  final url = Uri.parse('${baseUrl}neighborhoods/$cityId/');
-
-  try {
-    final response = await http.get(url);
-
-    if (response.statusCode == 200) {
-      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
-    }
-
-    print("Neighborhoods error: ${response.statusCode} | ${response.body}");
-    return null;
-  } catch (e) {
-    print("Connection error (Neighborhoods): $e");
-    return null;
+    print("Connection error (Ride Status): $e");
+    return false;
   }
 }

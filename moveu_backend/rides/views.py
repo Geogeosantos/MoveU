@@ -7,37 +7,17 @@ from django.db import models
 
 from users.models import User
 from rides.models import RideRequest
-from rides.serializers import RideRequestSerializer, UserSerializer
+from rides.serializers import RideRequestSerializer, AvailableDriverSerializer, PassengerDetailSerializer
 
 
 class AvailableDriversView(generics.ListAPIView):
-    serializer_class = UserSerializer
+    serializer_class = AvailableDriverSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
-        user = self.request.user
-
-        if user.is_driver:
-            return User.objects.none()
-
-        # Passageiro precisa informar dia e horário desejados
-        day = self.request.query_params.get("day")
-        time = self.request.query_params.get("time")
-
-        if not day or not time:
-            return User.objects.none()
-
-        time_obj = parse_time(time)
-
-        # Filtra motoristas compatíveis com a rota e horário
-        return User.objects.filter(
-            is_driver=True,
-            university=user.university,
-            neighborhood=user.neighborhood,
-            schedules__day=day,
-            schedules__start_time__lte=time_obj,
-            schedules__end_time__gte=time_obj
-        ).distinct()
+        qs = User.objects.filter(is_driver=True)
+        print("Motoristas encontrados:", qs)  # log no console
+        return qs
 
 
 class RideRequestCreateView(generics.CreateAPIView):

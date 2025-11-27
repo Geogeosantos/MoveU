@@ -17,7 +17,7 @@ class UserTypePage extends StatelessWidget {
         Navigator.pushNamed(context, AppRoutes.driverRegister, arguments: token);
       } else {
         // Se passageiro, vai para a home/login
-        Navigator.pushNamed(context, AppRoutes.login, arguments: token); 
+        Navigator.pushNamed(context, AppRoutes.driversList, arguments: token); 
       }
     } else {
       // Mostra erro caso falhe
