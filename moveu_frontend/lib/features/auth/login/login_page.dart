@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../routes/app_routes.dart';
 import '../../../data/services/api_service.dart';
+import '../../auth/rides/drivers_list_page.dart';
+import '../../auth/rides/rides_request_page.dart';
 
 /// Tela de Login
 class LoginPage extends StatefulWidget {
@@ -37,12 +39,36 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (token != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Login realizado com sucesso!")),
-      );
+      // Busca perfil do usuário
+      final profile = await getProfile(token);
 
-      // Aqui você pode navegar para a tela principal do app
-      // Ex: Navigator.pushReplacementNamed(context, AppRoutes.home);
+      if (profile != null) {
+        final isDriver = profile['is_driver'] ?? false;
+
+        if (profile != null && profile['is_driver'] == true) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => RideRequestsPage(token: token),
+            ),
+          );
+        } else {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DriversListPage(token: token),
+            ),
+          );
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login realizado com sucesso!")),
+        );
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text("Erro ao buscar perfil")));
+      }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Email ou senha incorretos")),
