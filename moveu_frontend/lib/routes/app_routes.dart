@@ -4,7 +4,7 @@ class AppRoutes {
   static const register = '/register';
   static const userType = '/user-type';
   static const driverRegister = '/driver-register';
-  static const userSchedule = '/user_schedule';
+  static const userSchedule = '/user_schedule'; // nova Rota,
+  static const homeNavigation = '/home-navigation';
   static const driversList = '/drivers-list'; // nova rota
-
 }
