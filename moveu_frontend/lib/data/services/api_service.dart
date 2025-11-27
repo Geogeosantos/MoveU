@@ -292,3 +292,23 @@ Future<bool> postRideStatus({
     return false;
   }
 }
+
+/// GET RIDE HISTORY (passageiro ou motorista)
+Future<List<Map<String, dynamic>>> getRideHistory(String token) async {
+  final url = Uri.parse('${baseUrl}rides/ride_history/'); // ainda vai criar essa URL no Django
+
+  try {
+    final response = await http.get(url, headers: authHeaders(token));
+
+    if (response.statusCode == 200) {
+      // Retorna uma lista de mapas (cada corrida)
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    }
+
+    print("Get ride history error: ${response.statusCode} | ${response.body}");
+    return [];
+  } catch (e) {
+    print("Connection error (Ride History): $e");
+    return [];
+  }
+}

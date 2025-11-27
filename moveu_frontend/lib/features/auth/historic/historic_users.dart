@@ -1,21 +1,22 @@
 import 'package:flutter/material.dart';
-import 'ride_service.dart';
-import 'ride_model.dart';
+import '../../../data/services/api_service.dart';
 
 class HistoricoPage extends StatefulWidget {
-  const HistoricoPage({super.key});
+  final String token; // token do usuário logado
+
+  const HistoricoPage({super.key, required this.token});
 
   @override
   State<HistoricoPage> createState() => _HistoricoPageState();
 }
 
 class _HistoricoPageState extends State<HistoricoPage> {
-  late Future<List<RideModel>> futureHistorico;
+  late Future<List<Map<String, dynamic>>> futureHistorico;
 
   @override
   void initState() {
     super.initState();
-    futureHistorico = RideService.getHistorico();
+    futureHistorico = getRideHistory(widget.token);
   }
 
   @override
@@ -23,7 +24,7 @@ class _HistoricoPageState extends State<HistoricoPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          "CARONAS",
+          "Histórico de Corridas",
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -31,27 +32,21 @@ class _HistoricoPageState extends State<HistoricoPage> {
         foregroundColor: Colors.black,
         elevation: 0,
       ),
-
-      body: FutureBuilder<List<RideModel>>(
+      body: FutureBuilder<List<Map<String, dynamic>>>(
         future: futureHistorico,
         builder: (context, snapshot) {
-
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
           }
 
           if (snapshot.hasError) {
-            return Center(
-              child: Text("Erro ao carregar histórico."),
-            );
+            return Center(child: Text("Erro ao carregar histórico."));
           }
 
           final rides = snapshot.data ?? [];
 
           if (rides.isEmpty) {
-            return const Center(
-              child: Text("Nenhuma corrida encontrada."),
-            );
+            return const Center(child: Text("Nenhuma corrida encontrada."));
           }
 
           return ListView.builder(
@@ -59,17 +54,25 @@ class _HistoricoPageState extends State<HistoricoPage> {
             itemBuilder: (context, index) {
               final ride = rides[index];
 
+              // Dependendo de como o JSON da API vier, ajuste os campos
+              final passengerName =
+                  ride['passenger']?['username'] ?? 'Passageiro';
+              final driverName = ride['driver']?['username'] ?? 'Motorista';
+              final origem =
+                  ride['neighborhood_name'] ??
+                  ride['university_name'] ??
+                  'Origem';
+              final data = ride['created_at']?.substring(0, 10) ?? '';
+              final hora = ride['start_time'] ?? '';
+
               return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(15),
                   boxShadow: const [
-                    BoxShadow(
-                      color: Color(0x11000000),
-                      blurRadius: 14,
-                    )
+                    BoxShadow(color: Color(0x11000000), blurRadius: 10),
                   ],
                 ),
                 child: Row(
@@ -80,38 +83,44 @@ class _HistoricoPageState extends State<HistoricoPage> {
                       child: Icon(Icons.person, color: Colors.white),
                     ),
                     const SizedBox(width: 12),
-
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            ride.nome,
-                            style: const TextStyle(
-                                fontSize: 15, fontWeight: FontWeight.bold),
+                            "Passageiro: $passengerName",
+                            style: const TextStyle(fontWeight: FontWeight.bold),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            ride.origem,
+                            "Motorista: $driverName",
+                            style: const TextStyle(fontSize: 12),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Origem: $origem",
                             style: const TextStyle(fontSize: 12),
                           ),
                         ],
                       ),
                     ),
-
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
                         Text(
-                          ride.hora,
+                          hora,
                           style: const TextStyle(
-                              fontSize: 10, fontWeight: FontWeight.bold),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          ride.data,
+                          data,
                           style: const TextStyle(
-                              fontSize: 10, fontWeight: FontWeight.bold),
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ],
                     ),

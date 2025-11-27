@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'routes/app_routes.dart';
 
 // IMPORTANTE: importar o arquivo onde está seu navbar + IndexedStack
-import 'widgets/navbar.dart';
+import 'package:moveu_frontend/widgets/navbar.dart';
 import 'features/auth/welcome/welcome_page.dart';
 import 'features/auth/login/login_page.dart';
 import 'features/auth/register/register_page.dart';
@@ -24,7 +24,6 @@ class MyApp extends StatelessWidget {
       initialRoute: AppRoutes.welcome,
       onGenerateRoute: (settings) {
         switch (settings.name) {
-
           case AppRoutes.welcome:
             return MaterialPageRoute(builder: (_) => const WelcomePage());
 
@@ -54,8 +53,12 @@ class MyApp extends StatelessWidget {
 
           // ⭐ NOVA ROTA PRINCIPAL COM NAVBAR
           case AppRoutes.homeNavigation:
+            final args = settings.arguments as Map<String, dynamic>;
+            final token = args['token'] as String;
+            final isDriver = args['isDriver'] as bool;
+
             return MaterialPageRoute(
-              builder: (_) => const CustomNavBar(),
+              builder: (_) => CustomNavBar(token: token, isDriver: isDriver),
             );
 
           default:

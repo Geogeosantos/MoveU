@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import '../features/auth/historic/historic_users.dart';
+import '../features/auth/profile/user_profile.dart';
+import '../features/auth/rides/drivers_list_page.dart';
+import '../features/auth/rides/rides_request_page.dart';
 
 class CustomNavBar extends StatelessWidget {
-  final int currentIndex;
-  final Function(int) onTap;
+  final String token; // token do usuário logado
+  final bool isDriver; // true = motorista, false = passageiro
 
   const CustomNavBar({
     super.key,
-    required this.currentIndex,
-    required this.onTap,
+    required this.token,
+    required this.isDriver,
   });
 
   @override
@@ -25,19 +29,21 @@ class CustomNavBar extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           _navItem(
-            index: 0,
+            context: context,
             icon: Icons.home,
-            isSelected: currentIndex == 0,
+            page: isDriver
+                ? RideRequestsPage(token: token)
+                : DriversListPage(token: token),
           ),
           _navItem(
-            index: 1,
+            context: context,
             icon: Icons.history,
-            isSelected: currentIndex == 1,
+            page: HistoricoPage(token: token),
           ),
           _navItem(
-            index: 2,
+            context: context,
             icon: Icons.person,
-            isSelected: currentIndex == 2,
+            page: PassengerEditPage(),
           ),
         ],
       ),
@@ -45,24 +51,29 @@ class CustomNavBar extends StatelessWidget {
   }
 
   Widget _navItem({
-    required int index,
+    required BuildContext context,
     required IconData icon,
-    required bool isSelected,
+    required Widget page,
   }) {
     return GestureDetector(
-      onTap: () => onTap(index),
+      onTap: () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (_) => page),
+        );
+      },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         width: 50,
         height: 45,
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           shape: BoxShape.circle,
-          color: isSelected ? Colors.white : Colors.transparent,
+          color: Colors.transparent,
         ),
         child: Icon(
           icon,
           size: 28,
-          color: isSelected ? Colors.black : Colors.white,
+          color: Colors.white,
         ),
       ),
     );
