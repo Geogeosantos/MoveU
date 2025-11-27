@@ -40,7 +40,16 @@ class User(AbstractUser):
 
     city = models.ForeignKey(City, null=True, blank=True, on_delete=models.SET_NULL)
     neighborhood = models.ForeignKey(Neighborhood, null=True, blank=True, on_delete=models.SET_NULL)
-    University = models.ForeignKey(University, null=True, blank=True, on_delete=models.SET_NULL)
+    university = models.ForeignKey(University, null=True, blank=True, on_delete=models.SET_NULL)
+    photo = models.ImageField(upload_to="profile_photos/", blank=True, null=True)
+
+    
+    GENDERS = [
+    ("M", "Masculino"),
+    ("F", "Feminino"),
+    ("O", "Outro"),
+    ]
+    gender = models.CharField(max_length=1, choices=GENDERS, null=True, blank=True)
     
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["username"]

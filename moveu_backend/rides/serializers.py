@@ -1,19 +1,13 @@
 from rest_framework import serializers
 from .models import RideRequest
 from users.serializers import UserSerializer
+from users.models import User
 
 class RideRequestSerializer(serializers.ModelSerializer):
     passenger = UserSerializer(read_only=True)
-    driver = UserSerializer(read_only=True)
-
-    class Meta:
-        model = RideRequest
-        fields = ["id", "passenger", "driver", "day", "time", "status", "created_at"]
-
-class RideRequestSerializer(serializers.ModelSerializer):
-    driver = serializers.StringRelatedField()
-    passenger = serializers.StringRelatedField()
+    driver = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_driver=True))
 
     class Meta:
         model = RideRequest
         fields = "__all__"
+        read_only_fields = ["status"]

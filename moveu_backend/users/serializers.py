@@ -9,7 +9,9 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ["id", "username", "email", "phone_number", "is_driver", "city", "neighborhood"]
+        fields = [
+            "id", "username", "email", "phone_number", 
+            "is_driver", "city", "neighborhood", "university", "gender", "photo", "schedules"]
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -19,18 +21,15 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = User
         fields = [
             "id", "username", "email", "phone_number",
-            "password", "city", "neighborhood"
+            "password", "city", "neighborhood", "university", 
+            "gender",  "photo"
         ]
+    
 
     def create(self, validated_data):
-        user = User(
-            username=validated_data["username"],
-            email=validated_data["email"],
-            phone_number=validated_data.get("phone_number", ""),
-            city=validated_data.get("city"),
-            neighborhood=validated_data.get("neighborhood"),
-        )
-        user.set_password(validated_data["password"])
+        password = validated_data.pop("password")
+        user = User(**validated_data)
+        user.set_password(password)
         user.save()
         return user
 

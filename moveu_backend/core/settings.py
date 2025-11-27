@@ -99,7 +99,10 @@ WSGI_APPLICATION = 'core.wsgi.application'
 #         'HOST': 'localhost',          # pode ser '127.0.0.1' ou 'localhost'
 #         'PORT': '5432',               # porta padrão do PostgreSQL
 #     }
-# }
+# 
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 DATABASES = {
     'default': {

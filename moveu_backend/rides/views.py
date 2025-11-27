@@ -1,9 +1,13 @@
-from rest_framework import generics, permissions
-from users.models import User
+from rest_framework import generics, permissions, status, serializers
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from django.utils.dateparse import parse_time
 from django.db import models
+
+from users.models import User
 from rides.models import RideRequest
 from rides.serializers import RideRequestSerializer, UserSerializer
-from django.utils.dateparse import parse_time
 
 
 class AvailableDriversView(generics.ListAPIView):
@@ -12,29 +16,28 @@ class AvailableDriversView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+
+        if user.is_driver:
+            return User.objects.none()
+
+        # Passageiro precisa informar dia e horário desejados
         day = self.request.query_params.get("day")
         time = self.request.query_params.get("time")
-        city_id = self.request.query_params.get("city_id")
-        neighborhood_id = self.request.query_params.get("neighborhood_id")
-        university_id = self.request.query_params.get("university_id")
 
-        if not all([day, time, city_id, neighborhood_id, university_id]):
+        if not day or not time:
             return User.objects.none()
 
         time_obj = parse_time(time)
 
-        drivers = User.objects.filter(
+        # Filtra motoristas compatíveis com a rota e horário
+        return User.objects.filter(
             is_driver=True,
-            city_id=city_id,
-            neighborhood_id=neighborhood_id,
-            university_id=university_id
-        ).filter(
+            university=user.university,
+            neighborhood=user.neighborhood,
             schedules__day=day,
             schedules__start_time__lte=time_obj,
             schedules__end_time__gte=time_obj
         ).distinct()
-
-        return drivers
 
 
 class RideRequestCreateView(generics.CreateAPIView):
@@ -53,13 +56,13 @@ class RideRequestReceivedView(generics.ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
+
         if not user.is_driver:
             return RideRequest.objects.none()
 
         return RideRequest.objects.filter(
-            driver__isnull=True,
-            passenger__city=user.city,
-            passenger__neighborhood=user.neighborhood
+            driver=user,
+            status="pending"
         )
 
 
@@ -73,3 +76,29 @@ class RideHistoryView(generics.ListAPIView):
             models.Q(driver=user) | models.Q(passenger=user),
             status="completed"
         ).order_by("-created_at")
+
+
+class RideRequestUpdateStatusView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, ride_id):
+        user = request.user
+        ride = get_object_or_404(RideRequest, id=ride_id)
+
+        if not user.is_driver:
+            return Response({"error": "Somente motoristas podem responder solicitações."},
+                            status=status.HTTP_403_FORBIDDEN)
+
+        status_update = request.data.get("status")
+        
+        if status_update == "rejected":
+            ride.reason_rejected = request.data.get("reason", "Sem justificativa do motorista.")
+
+        if status_update not in ["accepted", "rejected"]:
+            return Response({"error": "Status inválido."}, status=status.HTTP_400_BAD_REQUEST)
+
+        ride.status = status_update
+        ride.driver = user 
+        ride.save()
+
+        return Response({"status": f"Solicitação {status_update}."})
