@@ -1,53 +1,63 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 
-/// Base URL da sua API Django
-const String baseUrl = 'http://192.168.100.14:8000/api/users/';
+/// Base URL da API
+const String baseUrl = 'http://10.0.2.2:8000/api/users/';
 
-/// ----------------------------
-/// Função: Registrar usuário
-/// Retorna o token JWT se sucesso
-/// ----------------------------
+/// Headers padrão (quando não precisa token)
+Map<String, String> defaultHeaders = {"Content-Type": "application/json"};
+
+/// Headers quando precisa de autenticação
+Map<String, String> authHeaders(String token) => {
+  "Content-Type": "application/json",
+  "Authorization": "Bearer $token",
+};
+
+/// =================================================
+/// REGISTER USER
+/// =================================================
 Future<String?> registerUser({
-  required String nome,
+  required String username,
   required String email,
-  required String telefone,
-  required String senha,
+  required String phoneNumber,
+  required String password,
+  required int city,
+  required int neighborhood,
+  required int university,
+  required String gender,
 }) async {
   final url = Uri.parse('${baseUrl}register/');
 
+  final body = jsonEncode({
+    "username": username,
+    "email": email,
+    "phone_number": phoneNumber,
+    "password": password,
+    "city": city,
+    "neighborhood": neighborhood,
+    "university": university,
+    "gender": gender,
+  });
+
   try {
-    final response = await http.post(
-      url,
-      headers: {'Content-Type': 'application/json'},
-      body: jsonEncode({
-        'username': nome, // campo que o Django espera
-        'email': email,
-        'phone_number': telefone, // campo que o Django espera
-        'password': senha, // campo que o Django espera
-      }),
-    );
+    final response = await http.post(url, headers: defaultHeaders, body: body);
 
     if (response.statusCode == 201) {
       final data = jsonDecode(response.body);
-      print(data['access']);
-      print(response.statusCode);
-      return data['access']; // ou 'access' se você estiver usando JWT padrão
-    } else {
-      print(
-        'Erro ao registrar usuário: ${response.statusCode} | ${response.body}',
-      );
-      return null;
+      return data['access'];
     }
+
+    print("Register error: ${response.statusCode} | ${response.body}");
+    return null;
   } catch (e) {
-    print('Erro de conexão: $e');
+    print('Connection error (Register): $e');
     return null;
   }
 }
 
-/// ----------------------------
-/// Função: Registrar perfil de motorista
-/// ----------------------------
+/// =================================================
+/// REGISTER DRIVER PROFILE
+/// =================================================
 Future<bool> registerDriverProfile({
   required String token,
   required String cnh,
@@ -60,43 +70,36 @@ Future<bool> registerDriverProfile({
 }) async {
   final url = Uri.parse('${baseUrl}register_driver_profile/');
 
+  final body = jsonEncode({
+    "cnh": cnh,
+    "validade_cnh": validadeCnh,
+    "categoria_cnh": categoriaCnh,
+    "modelo_carro": modeloCarro,
+    "placa_carro": placaCarro,
+    "cor_carro": corCarro,
+    "ano_carro": anoCarro,
+  });
+
   try {
     final response = await http.post(
       url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-      body: jsonEncode({
-        "cnh": cnh,
-        "validade_cnh": validadeCnh,
-        "categoria_cnh": categoriaCnh,
-        "modelo_carro": modeloCarro,
-        "placa_carro": placaCarro,
-        "cor_carro": corCarro,
-        "ano_carro": anoCarro,
-      }),
+      headers: authHeaders(token),
+      body: body,
     );
 
-    if (response.statusCode == 201) {
-      print("Perfil de motorista registrado com sucesso!");
-      return true;
-    } else {
-      print(
-        'Erro ao registrar perfil: ${response.statusCode} | ${response.body}',
-      );
-      return false;
-    }
+    if (response.statusCode == 201) return true;
+
+    print("Driver profile error: ${response.statusCode} | ${response.body}");
+    return false;
   } catch (e) {
-    print('Erro de conexão: $e');
+    print("Connection error (DriverProfile): $e");
     return false;
   }
 }
 
-/// ----------------------------
-/// Função: Login do usuário
-/// Retorna o token JWT
-/// ----------------------------
+/// =================================================
+/// LOGIN USER
+/// =================================================
 Future<String?> loginUser({
   required String email,
   required String senha,
@@ -106,53 +109,47 @@ Future<String?> loginUser({
   try {
     final response = await http.post(
       url,
-      headers: {"Content-Type": "application/json"},
+      headers: defaultHeaders,
       body: jsonEncode({"email": email, "password": senha}),
     );
 
     if (response.statusCode == 200) {
       final data = jsonDecode(response.body);
-      return data['access']; // token JWT
-    } else {
-      print('Erro ao logar: ${response.statusCode} | ${response.body}');
-      return null;
+      return data['access'];
     }
+
+    print("Login error: ${response.statusCode} | ${response.body}");
+    return null;
   } catch (e) {
-    print('Erro de conexão: $e');
+    print("Connection error (Login): $e");
     return null;
   }
 }
 
-/// ----------------------------
-/// Função: Obter perfil do usuário
-/// ----------------------------
+/// =================================================
+/// GET PROFILE
+/// =================================================
 Future<Map<String, dynamic>?> getProfile(String token) async {
   final url = Uri.parse('${baseUrl}profile/');
 
   try {
-    final response = await http.get(
-      url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
-    );
+    final response = await http.get(url, headers: authHeaders(token));
 
     if (response.statusCode == 200) {
       return jsonDecode(response.body);
-    } else {
-      print('Erro ao obter perfil: ${response.statusCode} | ${response.body}');
-      return null;
     }
+
+    print("Profile error: ${response.statusCode} | ${response.body}");
+    return null;
   } catch (e) {
-    print('Erro de conexão: $e');
+    print("Connection error (Profile): $e");
     return null;
   }
 }
 
-/// ----------------------------
-/// Função: Atualizar perfil do usuário
-/// ----------------------------
+/// =================================================
+/// UPDATE PROFILE
+/// =================================================
 Future<bool> updateProfile({
   required String token,
   String? nome,
@@ -161,38 +158,29 @@ Future<bool> updateProfile({
 }) async {
   final url = Uri.parse('${baseUrl}profile/');
 
-  Map<String, dynamic> body = {};
-  if (nome != null) body['username'] = nome;
-  if (email != null) body['email'] = email;
-  if (telefone != null) body['phone_number'] = telefone;
+  final body = {
+    if (nome != null) "username": nome,
+    if (email != null) "email": email,
+    if (telefone != null) "phone_number": telefone,
+  };
 
   try {
     final response = await http.put(
       url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
+      headers: authHeaders(token),
       body: jsonEncode(body),
     );
 
-    if (response.statusCode == 200) {
-      return true;
-    } else {
-      print(
-        'Erro ao atualizar perfil: ${response.statusCode} | ${response.body}',
-      );
-      return false;
-    }
+    return response.statusCode == 200;
   } catch (e) {
-    print('Erro de conexão: $e');
+    print("Connection error (Update Profile): $e");
     return false;
   }
 }
 
-/// ----------------------------
-/// Função: Atualizar tipo de usuário
-/// ----------------------------
+/// =================================================
+/// SET USER TYPE
+/// =================================================
 Future<bool> setUserType({
   required String token,
   required String tipo, // "driver" ou "passenger"
@@ -202,33 +190,20 @@ Future<bool> setUserType({
   try {
     final response = await http.post(
       url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
+      headers: authHeaders(token),
       body: jsonEncode({"type": tipo}),
     );
 
-    if (response.statusCode == 200) {
-      print('Tipo de usuário atualizado');
-      return true;
-    } else {
-      print(
-        'Erro ao atualizar tipo de usuário: ${response.statusCode} | ${response.body}',
-      );
-      
-      return false;
-    }
+    return response.statusCode == 200;
   } catch (e) {
-    print('Erro de conexão: $e');
+    print("Connection error (User Type): $e");
     return false;
   }
 }
 
-
-/// ----------------------------
-/// Função: Cadastrar horário do usuário
-/// ----------------------------
+/// =================================================
+/// SET USER SCHEDULE
+/// =================================================
 Future<bool> setUserSchedule({
   required String token,
   required String day,
@@ -240,10 +215,7 @@ Future<bool> setUserSchedule({
   try {
     final response = await http.post(
       url,
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer $token",
-      },
+      headers: authHeaders(token),
       body: jsonEncode({
         "day": day,
         "start_time": startTime,
@@ -251,15 +223,72 @@ Future<bool> setUserSchedule({
       }),
     );
 
-    if (response.statusCode == 200 || response.statusCode == 201) {
-      print('Horário do $day cadastrado com sucesso');
-      return true;
-    } else {
-      print('Erro ao cadastrar horário: ${response.statusCode} | ${response.body}');
-      return false;
-    }
+    return response.statusCode == 200 || response.statusCode == 201;
   } catch (e) {
-    print('Erro de conexão ao cadastrar horário: $e');
+    print("Connection error (Schedule): $e");
     return false;
+  }
+}
+
+/// =================================================
+/// GET CITIES
+/// =================================================
+Future<List<Map<String, dynamic>>?> getCities() async {
+  final url = Uri.parse('${baseUrl}cities/');
+
+  try {
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    }
+
+    print("Cities error: ${response.statusCode} | ${response.body}");
+    return null;
+  } catch (e) {
+    print("Connection error (Cities): $e");
+    return null;
+  }
+}
+
+/// =================================================
+/// GET UNIVERSITIES
+/// =================================================
+Future<List<Map<String, dynamic>>?> getUniversities() async {
+  final url = Uri.parse('${baseUrl}universities/');
+
+  try {
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    }
+
+    print("Universities error: ${response.statusCode} | ${response.body}");
+    return null;
+  } catch (e) {
+    print("Connection error (Universities): $e");
+    return null;
+  }
+}
+
+/// =================================================
+/// GET NEIGHBORHOODS BY CITY
+/// =================================================
+Future<List<Map<String, dynamic>>?> getNeighborhoods(int cityId) async {
+  final url = Uri.parse('${baseUrl}neighborhoods/$cityId/');
+
+  try {
+    final response = await http.get(url);
+
+    if (response.statusCode == 200) {
+      return List<Map<String, dynamic>>.from(jsonDecode(response.body));
+    }
+
+    print("Neighborhoods error: ${response.statusCode} | ${response.body}");
+    return null;
+  } catch (e) {
+    print("Connection error (Neighborhoods): $e");
+    return null;
   }
 }

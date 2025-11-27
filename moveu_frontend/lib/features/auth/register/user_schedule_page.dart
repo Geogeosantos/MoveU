@@ -32,6 +32,13 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
     'Sexta': 'fri',
   };
 
+  String timeOfDayToString(TimeOfDay time) {
+  final hours = time.hour.toString().padLeft(2, '0');
+  final minutes = time.minute.toString().padLeft(2, '0');
+  return "$hours:$minutes:00"; // adiciona segundos
+}
+
+
   bool isLoading = false;
 
   Future<void> pickTime(BuildContext context, String day, bool isStart) async {
@@ -63,8 +70,8 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
         bool success = await setUserSchedule(
           token: widget.token,
           day: dayMap[day]!,
-          startTime: start.format(context),
-          endTime: end.format(context),
+          startTime: timeOfDayToString(start),
+          endTime: timeOfDayToString(end),
         );
         if (!success) allSuccess = false;
       }
