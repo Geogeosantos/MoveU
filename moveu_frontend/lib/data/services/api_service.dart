@@ -1,23 +1,16 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'dart:io';
 
-/// Base URL da API (apenas /api/)
 const String baseUrl = 'http://10.0.2.2:8000/api/';
 
-/// Headers padrão (quando não precisa token)
 Map<String, String> defaultHeaders = {"Content-Type": "application/json"};
 
-/// Headers quando precisa de autenticação
 Map<String, String> authHeaders(String token) => {
   "Content-Type": "application/json",
   "Authorization": "Bearer $token",
 };
 
-/// =================================================
-/// USERS ENDPOINTS
-/// =================================================
-
-/// REGISTER USER
 Future<String?> registerUser({
   required String username,
   required String email,
@@ -27,29 +20,37 @@ Future<String?> registerUser({
   required int neighborhood,
   required int university,
   required String gender,
+  required int age,
+  File? photo,
 }) async {
   final url = Uri.parse('${baseUrl}users/register/');
 
-  final body = jsonEncode({
-    "username": username,
-    "email": email,
-    "phone_number": phoneNumber,
-    "password": password,
-    "city": city,
-    "neighborhood": neighborhood,
-    "university": university,
-    "gender": gender,
-  });
+  var request = http.MultipartRequest('POST', url);
+
+  request.fields['username'] = username;
+  request.fields['email'] = email;
+  request.fields['phone_number'] = phoneNumber;
+  request.fields['password'] = password;
+  request.fields['city'] = city.toString();
+  request.fields['neighborhood'] = neighborhood.toString();
+  request.fields['university'] = university.toString();
+  request.fields['gender'] = gender;
+  request.fields['age'] = age.toString();
+
+  if (photo != null) {
+    request.files.add(await http.MultipartFile.fromPath('photo', photo.path));
+  }
 
   try {
-    final response = await http.post(url, headers: defaultHeaders, body: body);
+    final response = await request.send();
+    final body = await response.stream.bytesToString();
 
     if (response.statusCode == 201) {
-      final data = jsonDecode(response.body);
+      final data = jsonDecode(body);
       return data['access'];
     }
 
-    print("Register error: ${response.statusCode} | ${response.body}");
+    print("Register error: ${response.statusCode} | $body");
     return null;
   } catch (e) {
     print('Connection error (Register): $e');
@@ -57,7 +58,6 @@ Future<String?> registerUser({
   }
 }
 
-/// LOGIN USER
 Future<String?> loginUser({
   required String email,
   required String senha,
@@ -84,7 +84,6 @@ Future<String?> loginUser({
   }
 }
 
-/// GET PROFILE
 Future<Map<String, dynamic>?> getProfile(String token) async {
   final url = Uri.parse('${baseUrl}users/profile/');
 
@@ -92,7 +91,14 @@ Future<Map<String, dynamic>?> getProfile(String token) async {
     final response = await http.get(url, headers: authHeaders(token));
 
     if (response.statusCode == 200) {
-      return jsonDecode(response.body);
+      final body = jsonDecode(response.body);
+
+      if (body is Map<String, dynamic>) {
+        return body;
+      } else {
+        print("Profile response is not a valid object: $body");
+        return null;
+      }
     }
 
     print("Profile error: ${response.statusCode} | ${response.body}");
@@ -103,7 +109,6 @@ Future<Map<String, dynamic>?> getProfile(String token) async {
   }
 }
 
-/// UPDATE PROFILE
 Future<bool> updateProfile({
   required String token,
   String? nome,
@@ -132,10 +137,9 @@ Future<bool> updateProfile({
   }
 }
 
-/// SET USER TYPE
 Future<bool> setUserType({
   required String token,
-  required String tipo, // "driver" ou "passenger"
+  required String tipo,
 }) async {
   final url = Uri.parse('${baseUrl}users/set_user_type/');
 
@@ -153,7 +157,6 @@ Future<bool> setUserType({
   }
 }
 
-/// REGISTER DRIVER PROFILE
 Future<bool> registerDriverProfile({
   required String token,
   required String cnh,
@@ -193,7 +196,6 @@ Future<bool> registerDriverProfile({
   }
 }
 
-/// SET USER SCHEDULE
 Future<bool> setUserSchedule({
   required String token,
   required String day,
@@ -220,11 +222,6 @@ Future<bool> setUserSchedule({
   }
 }
 
-/// =================================================
-/// Rides ENDPOINTS
-/// =================================================
-
-/// GET AVAILABLE DRIVERS
 Future<List<Map<String, dynamic>>> getAvailableDrivers(String token) async {
   final url = Uri.parse('${baseUrl}rides/available_drivers/');
 
@@ -259,21 +256,15 @@ Future<List<Map<String, dynamic>>> getReceivedRideRequests(String token) async {
   }
 }
 
-/// =================================================
-/// UPDATE RIDE STATUS (ACCEPT / REJECT)
-/// =================================================
 Future<bool> postRideStatus({
   required String token,
   required int rideId,
-  required String status, // "accepted" ou "rejected"
-  String? reason,         // opcional, apenas se rejeitado
+  required String status,
+  String? reason,
 }) async {
   final url = Uri.parse('${baseUrl}rides/ride_status/$rideId/');
 
-  final body = {
-    "status": status,
-    if (reason != null) "reason": reason,
-  };
+  final body = {"status": status, if (reason != null) "reason": reason};
 
   try {
     final response = await http.post(
@@ -285,7 +276,8 @@ Future<bool> postRideStatus({
     if (response.statusCode == 200) return true;
 
     print(
-        "Error updating ride status: ${response.statusCode} | ${response.body}");
+      "Error updating ride status: ${response.statusCode} | ${response.body}",
+    );
     return false;
   } catch (e) {
     print("Connection error (Ride Status): $e");
@@ -293,15 +285,15 @@ Future<bool> postRideStatus({
   }
 }
 
-/// GET RIDE HISTORY (passageiro ou motorista)
 Future<List<Map<String, dynamic>>> getRideHistory(String token) async {
-  final url = Uri.parse('${baseUrl}rides/ride_history/'); // ainda vai criar essa URL no Django
+  final url = Uri.parse(
+    '${baseUrl}rides/ride_history/',
+  );
 
   try {
     final response = await http.get(url, headers: authHeaders(token));
 
     if (response.statusCode == 200) {
-      // Retorna uma lista de mapas (cada corrida)
       return List<Map<String, dynamic>>.from(jsonDecode(response.body));
     }
 

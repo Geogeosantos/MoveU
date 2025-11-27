@@ -4,6 +4,7 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+from rest_framework.parsers import MultiPartParser, FormParser
 from .models import User, UserSchedule, City, Neighborhood, DriverProfile, University
 from .serializers import UserSerializer, RegisterSerializer, DriverProfileSerializer, UserScheduleSerializer, CitySerializer, NeighborhoodSerializer, UniversitySerializer
 
@@ -11,6 +12,7 @@ from .serializers import UserSerializer, RegisterSerializer, DriverProfileSerial
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     serializer_class = RegisterSerializer
+    parser_classes = (MultiPartParser, FormParser)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -31,7 +33,6 @@ class RegisterView(generics.CreateAPIView):
         return Response(data, status=status.HTTP_201_CREATED, headers=headers)
 
 
-# Login with JWT
 class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
@@ -94,7 +95,7 @@ class LogoutView(APIView):
         try:
             refresh_token = request.data["refresh"]
             token = RefreshToken(refresh_token)
-            token.blacklist()  # invalida o refresh token
+            token.blacklist()
             return Response({"message": "Logout realizado com sucesso."}, status=status.HTTP_205_RESET_CONTENT)
         except Exception as e:
             return Response({"error": "Token inválido ou já expirado."}, status=status.HTTP_400_BAD_REQUEST)

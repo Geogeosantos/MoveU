@@ -37,6 +37,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
     is_driver = models.BooleanField(default=False)  # define se é motorista
+    age = models.PositiveIntegerField(null=True, blank=True)
 
     city = models.ForeignKey(City, null=True, blank=True, on_delete=models.SET_NULL)
     neighborhood = models.ForeignKey(Neighborhood, null=True, blank=True, on_delete=models.SET_NULL)

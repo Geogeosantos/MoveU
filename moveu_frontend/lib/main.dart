@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'routes/app_routes.dart';
-
-// IMPORTANTE: importar o arquivo onde está seu navbar + IndexedStack
 import 'package:moveu_frontend/widgets/navbar.dart';
 import 'features/auth/welcome/welcome_page.dart';
 import 'features/auth/login/login_page.dart';
@@ -51,7 +49,6 @@ class MyApp extends StatelessWidget {
               builder: (_) => DriverRegisterPage(token: token),
             );
 
-          // ⭐ NOVA ROTA PRINCIPAL COM NAVBAR
           case AppRoutes.homeNavigation:
             final args = settings.arguments as Map<String, dynamic>;
             final token = args['token'] as String;

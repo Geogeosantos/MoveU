@@ -14,7 +14,6 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
   final Map<String, TimeOfDay?> startTimes = {};
   final Map<String, TimeOfDay?> endTimes = {};
 
-  // Dias visíveis na UI
   final List<String> daysOfWeek = [
     'Segunda',
     'Terça',
@@ -23,7 +22,6 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
     'Sexta',
   ];
 
-  // Mapeamento para enviar ao backend
   final Map<String, String> dayMap = {
     'Segunda': 'mon',
     'Terça': 'tue',
@@ -35,7 +33,7 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
   String timeOfDayToString(TimeOfDay time) {
   final hours = time.hour.toString().padLeft(2, '0');
   final minutes = time.minute.toString().padLeft(2, '0');
-  return "$hours:$minutes:00"; // adiciona segundos
+  return "$hours:$minutes:00";
 }
 
 
@@ -120,7 +118,7 @@ class _UserSchedulePageState extends State<UserSchedulePage> {
               padding: const EdgeInsets.symmetric(
                 horizontal: 20,
                 vertical: 90,
-              ), // aumentei de 30 para 60
+              ), 
               child: Column(
                 children: [
                   ...daysOfWeek.map(

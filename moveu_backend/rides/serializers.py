@@ -41,13 +41,21 @@ class PassengerDetailSerializer(serializers.ModelSerializer):
             }
             for s in schedules
         ]
+        
+class DriverDetailSerializer(serializers.ModelSerializer):
+    university_name = serializers.CharField(source='university.name', read_only=True)
+    neighborhood_name = serializers.CharField(source='neighborhood.name', read_only=True)
+
+    class Meta:
+        model = User
+        fields = ['id', 'username', 'photo', 'university_name', 'neighborhood_name']
 
         
     
 
 class RideRequestSerializer(serializers.ModelSerializer):
     passenger = PassengerDetailSerializer(read_only=True)
-    driver = serializers.PrimaryKeyRelatedField(queryset=User.objects.filter(is_driver=True))
+    driver = DriverDetailSerializer(read_only=True)
 
     class Meta:
         model = RideRequest

@@ -20,8 +20,8 @@ urlpatterns = [
     path("logout/", LogoutView.as_view(), name="logout"),
 
     # Motorista / Passageiro
-    path("set_user_type/", SetUserTypeView.as_view(), name="set_user_type"),  # define se é motorista ou passageiro
-    path("register_driver_profile/", RegisterDriverProfileView.as_view(), name="register_driver_profile"),  # completa registro motorista
+    path("set_user_type/", SetUserTypeView.as_view(), name="set_user_type"),
+    path("register_driver_profile/", RegisterDriverProfileView.as_view(), name="register_driver_profile"),
     path('set_user_schedule/', UserScheduleListCreateView.as_view(), name='user_schedule'),
 
     # Cidades /  Bairros

@@ -16,7 +16,7 @@ class AvailableDriversView(generics.ListAPIView):
 
     def get_queryset(self):
         qs = User.objects.filter(is_driver=True)
-        print("Motoristas encontrados:", qs)  # log no console
+        print("Motoristas encontrados:", qs)
         return qs
 
 

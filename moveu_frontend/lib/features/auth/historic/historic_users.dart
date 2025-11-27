@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../data/services/api_service.dart';
+import '../../../widgets/navbar.dart';
 
 class HistoricoPage extends StatefulWidget {
-  final String token; // token do usuário logado
+  final String token;
+  final bool isDriver;
 
-  const HistoricoPage({super.key, required this.token});
+  const HistoricoPage({super.key, required this.token, required this.isDriver});
 
   @override
   State<HistoricoPage> createState() => _HistoricoPageState();
@@ -23,6 +25,7 @@ class _HistoricoPageState extends State<HistoricoPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: const Text(
           "Histórico de Corridas",
           style: TextStyle(fontWeight: FontWeight.bold),
@@ -30,7 +33,7 @@ class _HistoricoPageState extends State<HistoricoPage> {
         centerTitle: true,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
-        elevation: 0,
+        elevation: 1,
       ),
       body: FutureBuilder<List<Map<String, dynamic>>>(
         future: futureHistorico,
@@ -40,7 +43,7 @@ class _HistoricoPageState extends State<HistoricoPage> {
           }
 
           if (snapshot.hasError) {
-            return Center(child: Text("Erro ao carregar histórico."));
+            return const Center(child: Text("Erro ao carregar histórico."));
           }
 
           final rides = snapshot.data ?? [];
@@ -53,18 +56,15 @@ class _HistoricoPageState extends State<HistoricoPage> {
             itemCount: rides.length,
             itemBuilder: (context, index) {
               final ride = rides[index];
-
-              // Dependendo de como o JSON da API vier, ajuste os campos
               final passengerName =
                   ride['passenger']?['username'] ?? 'Passageiro';
               final driverName = ride['driver']?['username'] ?? 'Motorista';
               final origem =
-                  ride['neighborhood_name'] ??
-                  ride['university_name'] ??
+                  ride['passenger']?['neighborhood_name'] ??
+                  ride['passenger']?['university_name'] ??
                   'Origem';
               final data = ride['created_at']?.substring(0, 10) ?? '';
               final hora = ride['start_time'] ?? '';
-
               return Container(
                 margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 padding: const EdgeInsets.all(16),
@@ -130,6 +130,10 @@ class _HistoricoPageState extends State<HistoricoPage> {
             },
           );
         },
+      ),
+      bottomNavigationBar: CustomNavBar(
+        token: widget.token,
+        isDriver: widget.isDriver,
       ),
     );
   }

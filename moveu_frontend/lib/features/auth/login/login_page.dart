@@ -39,7 +39,6 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     if (token != null) {
-      // Busca perfil do usuário
       final profile = await getProfile(token);
 
       if (profile != null) {
@@ -56,7 +55,8 @@ class _LoginPageState extends State<LoginPage> {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(
-              builder: (context) => DriversListPage(token: token),
+              builder: (context) =>
+                  DriversListPage(token: token, isDriver: isDriver),
             ),
           );
         }

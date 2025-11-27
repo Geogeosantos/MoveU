@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import '../../../data/services/api_service.dart';
 import 'package:intl/intl.dart'; // Para formatar a data
+import '../../auth/rides/rides_request_page.dart';
 
 class DriverRegisterPage extends StatefulWidget {
-  final String token; // JWT do usuário logado
+  final String token;
   const DriverRegisterPage({super.key, required this.token});
 
   @override
@@ -22,7 +23,6 @@ class _DriverRegisterPageState extends State<DriverRegisterPage> {
   bool isLoading = false;
 
   Future<void> submitDriverProfile() async {
-    // Validação de campos obrigatórios
     if (cnhController.text.isEmpty ||
         validadeController.text.isEmpty ||
         categoriaController.text.isEmpty ||
@@ -30,9 +30,9 @@ class _DriverRegisterPageState extends State<DriverRegisterPage> {
         placaController.text.isEmpty ||
         corController.text.isEmpty ||
         anoController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Preencha todos os campos")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Preencha todos os campos")));
       return;
     }
 
@@ -55,11 +55,16 @@ class _DriverRegisterPageState extends State<DriverRegisterPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Perfil de motorista registrado!")),
       );
-      Navigator.pop(context); // Volta para tela anterior
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Erro ao registrar perfil")),
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (context) => RideRequestsPage(token: widget.token),
+        ),
       );
+    } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Erro ao registrar perfil")));
     }
   }
 
@@ -138,8 +143,11 @@ class _DriverRegisterPageState extends State<DriverRegisterPage> {
     );
   }
 
-  Widget _buildTextField(TextEditingController controller, String label,
-      {bool isNumber = false}) {
+  Widget _buildTextField(
+    TextEditingController controller,
+    String label, {
+    bool isNumber = false,
+  }) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(
@@ -154,7 +162,10 @@ class _DriverRegisterPageState extends State<DriverRegisterPage> {
   }
 
   Widget _buildDateField(
-      TextEditingController controller, String label, BuildContext context) {
+    TextEditingController controller,
+    String label,
+    BuildContext context,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextField(

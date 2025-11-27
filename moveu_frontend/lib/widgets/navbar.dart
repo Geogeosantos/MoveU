@@ -1,18 +1,15 @@
 import 'package:flutter/material.dart';
 import '../features/auth/historic/historic_users.dart';
-import '../features/auth/profile/user_profile.dart';
 import '../features/auth/rides/drivers_list_page.dart';
 import '../features/auth/rides/rides_request_page.dart';
+import '../features/auth/profile/passenger_profile_page.dart';
+import '../features/auth/profile/driver_profile_page.dart';
 
 class CustomNavBar extends StatelessWidget {
-  final String token; // token do usuário logado
-  final bool isDriver; // true = motorista, false = passageiro
+  final String token;
+  final bool isDriver;
 
-  const CustomNavBar({
-    super.key,
-    required this.token,
-    required this.isDriver,
-  });
+  const CustomNavBar({super.key, required this.token, required this.isDriver});
 
   @override
   Widget build(BuildContext context) {
@@ -33,17 +30,19 @@ class CustomNavBar extends StatelessWidget {
             icon: Icons.home,
             page: isDriver
                 ? RideRequestsPage(token: token)
-                : DriversListPage(token: token),
+                : DriversListPage(token: token, isDriver: isDriver),
           ),
           _navItem(
             context: context,
             icon: Icons.history,
-            page: HistoricoPage(token: token),
+            page: HistoricoPage(token: token, isDriver: isDriver),
           ),
           _navItem(
             context: context,
             icon: Icons.person,
-            page: PassengerEditPage(),
+            page: isDriver
+                ? DriverProfilePage(token: token)
+                : PassengerProfilePage(token: token),
           ),
         ],
       ),
@@ -70,11 +69,7 @@ class CustomNavBar extends StatelessWidget {
           shape: BoxShape.circle,
           color: Colors.transparent,
         ),
-        child: Icon(
-          icon,
-          size: 28,
-          color: Colors.white,
-        ),
+        child: Icon(icon, size: 28, color: Colors.white),
       ),
     );
   }

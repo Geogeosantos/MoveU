@@ -7,7 +7,7 @@ class WelcomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF0F1F1), // cor principal do app
+      backgroundColor: const Color(0xFFF0F1F1),
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 50),
@@ -18,7 +18,7 @@ class WelcomePage extends StatelessWidget {
               Column(
                 children: [
                   Image.asset(
-                    'lib/data/assets/images/logo.jpg', // coloque sua logo aqui
+                    'lib/data/assets/images/logo.jpg',
                     width: 150,
                     height: 150,
                   ),

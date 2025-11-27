@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
 import '../../../data/services/api_service.dart';
+import '../../../widgets/navbar.dart'; // importe o CustomNavBar
 
 class DriversListPage extends StatefulWidget {
   final String token;
-  const DriversListPage({super.key, required this.token});
+  final bool isDriver;
+
+  const DriversListPage({
+    super.key,
+    required this.token,
+    required this.isDriver,
+  });
 
   @override
   State<DriversListPage> createState() => _DriversListPageState();
@@ -77,7 +84,7 @@ class _DriversListPageState extends State<DriversListPage> {
           ),
           IconButton(
             onPressed: () {
-              // Aqui você pode abrir detalhes ou iniciar ação de carona
+              // ação ao clicar
             },
             icon: const Icon(Icons.arrow_forward_ios, color: Color(0xFF40B59F)),
           ),
@@ -91,16 +98,14 @@ class _DriversListPageState extends State<DriversListPage> {
     return Scaffold(
       backgroundColor: const Color(0xFFF0F1F1),
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF0F1F1),
+        automaticallyImplyLeading: false,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
         elevation: 1,
-        iconTheme: const IconThemeData(color: Color(0xFF352555)),
+        centerTitle: true,
         title: const Text(
           "Lista de Motoristas",
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            color: Color(0xFF352555),
-          ),
+          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 20),
         ),
       ),
       body: isLoading
@@ -124,6 +129,11 @@ class _DriversListPageState extends State<DriversListPage> {
                 },
               ),
             ),
+      // ✅ Aqui você adiciona a Navbar
+      bottomNavigationBar: CustomNavBar(
+        token: widget.token,
+        isDriver: widget.isDriver,
+      ),
     );
   }
 }

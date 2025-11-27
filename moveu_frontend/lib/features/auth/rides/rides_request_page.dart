@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../../../data/services/api_service.dart';
 import 'rides_request_detail_page.dart'; // você vai criar a função para pegar as solicitações
+import '../../../widgets/navbar.dart'; // importe o CustomNavBar
+
 
 class RideRequestsPage extends StatefulWidget {
   final String token;
@@ -124,6 +126,11 @@ class _RideRequestsPageState extends State<RideRequestsPage> {
                     },
                   ),
                 ),
+
+      bottomNavigationBar: CustomNavBar(
+        token: widget.token,
+        isDriver: true, // O perfil aqui SEMPRE é motorista
+      ),
     );
   }
 }

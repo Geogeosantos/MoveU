@@ -75,7 +75,6 @@ class _RideRequestDetailPageState extends State<RideRequestDetailPage> {
   Widget build(BuildContext context) {
     final passenger = widget.passengerData;
 
-    // função auxiliar para converter gênero
     String formatGender(String? gender) {
       if (gender == "M") return "Masculino";
       if (gender == "F") return "Feminino";
@@ -120,7 +119,6 @@ class _RideRequestDetailPageState extends State<RideRequestDetailPage> {
 
               const Divider(height: 30, thickness: 1),
 
-              // Horários
               const Align(
                 alignment: Alignment.centerLeft,
                 child: Text("Horários",

@@ -1,26 +1,21 @@
 import 'package:flutter/material.dart';
 import '../../../routes/app_routes.dart';
-import '../../../data/services/api_service.dart'; // importe seu API Service
+import '../../../data/services/api_service.dart';
 
 class UserTypePage extends StatelessWidget {
   final String token;
   const UserTypePage({super.key, required this.token});
 
-  // Função para atualizar tipo de usuário usando API Service
   Future<void> updateUserType(BuildContext context, String tipo) async {
-    // Usa o tipo que veio do botão
     bool success = await setUserType(token: token, tipo: tipo);
 
     if (success) {
       if (tipo == "driver") {
-        // Se motorista, vai para registro de motorista
         Navigator.pushNamed(context, AppRoutes.driverRegister, arguments: token);
       } else {
-        // Se passageiro, vai para a home/login
-        Navigator.pushNamed(context, AppRoutes.driversList, arguments: token); 
+        Navigator.pushNamed(context, AppRoutes.driversList, arguments: token);
       }
     } else {
-      // Mostra erro caso falhe
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Erro ao atualizar tipo de usuário.')),
       );
@@ -46,8 +41,6 @@ class UserTypePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 50),
-
-            // Botão Motorista
             ElevatedButton(
               onPressed: () => updateUserType(context, "driver"),
               style: ElevatedButton.styleFrom(
@@ -68,8 +61,6 @@ class UserTypePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 20),
-
-            // Botão Passageiro
             ElevatedButton(
               onPressed: () => updateUserType(context, "passenger"),
               style: ElevatedButton.styleFrom(
